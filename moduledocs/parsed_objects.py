@@ -26,9 +26,9 @@ class ParsedDocstring:
 class ParsedImport:
     """Parsed import from module."""
 
-    import_name: str
     import_from: str
-    import_as: str
+    import_import: List[str]
+    import_as: List[str]
 
 
 @dataclass
