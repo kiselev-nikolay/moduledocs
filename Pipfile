@@ -7,6 +7,9 @@ verify_ssl = true
 flake8 = "*"
 pytest = "*"
 mccabe = "*"
+flake8-docstrings = "*"
+flake8-quotes = "*"
+flake8-mypy = "*"
 
 [packages]
 parso = "*"
