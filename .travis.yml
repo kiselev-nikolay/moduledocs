@@ -3,6 +3,10 @@ python:
 - 3.7
 install:
 - pipenv install --dev
+- mkdir testset
+- cd testset
+- git clone https://github.com/python/mypy.git
+- cd ..
 script:
 - pipenv run flake8 moduledocs/*
 - pipenv run pytest moduledocs/*

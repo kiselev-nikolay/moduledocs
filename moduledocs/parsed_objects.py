@@ -16,6 +16,11 @@ class ParsedDocstring:
 
     raw: str
 
+    def __post_init__(self):
+        """Render markdown or ReST  docstring."""
+        # TODO process markdown or rst in docstring
+        self.doc = self.raw
+
 
 @dataclass
 class ParsedImport:
@@ -88,7 +93,7 @@ class ParsedModule:
     """Parsed module."""
 
     name: str
-    absolute_path: Path
+    path: Path
     docstring: ParsedDocstring
     imports: List[ParsedImport]
     statements: List[ParsedStatement]
