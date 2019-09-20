@@ -3,8 +3,8 @@
 from pathlib import Path
 from typing import List, Iterator, Union, Any
 import parso
-from parso.python.tree import Node, Module, Class, Function, Keyword,\
-    PythonNode, Name, Operator, Import, ImportFrom, ImportName
+from parso.python.tree import Node, PythonNode, Module, Class, Function,\
+    Keyword, Name, Operator, ExprStmt
 from .parsed_objects import ParsedArgument, ParsedClass, ParsedDecorator,\
     ParsedDocstring, ParsedFunction, ParsedImport, ParsedModule,\
     ParsedParameter, ParsedStatement, ParsedKeyword, ParsedOperator
@@ -21,16 +21,6 @@ def extract_doc(node: Union[Module, Class, Function]) -> ParsedDocstring:
     return ParsedDocstring(doc.strip())
 
 
-def find_nodes(node: Node, target_type: Any) -> Iterator[Node]:
-    has_type_match = isinstance(node, target_type)
-    if not has_type_match and hasattr(node, 'children'):
-        for child in node.children:
-            for target in find_nodes(child, target_type):
-                yield target
-    elif has_type_match:
-        yield node
-
-
 def filter_nodes(node: Node, targets: List[Any]) -> Iterator[Node]:
     targets_hit = [isinstance(node, t) for t in targets]
     if hasattr(node, 'children'):
@@ -39,6 +29,18 @@ def filter_nodes(node: Node, targets: List[Any]) -> Iterator[Node]:
                 yield nodes
     elif any(targets_hit):
         yield node
+
+
+def shallow_filter_nodes(node: Node, targets: List[Any],
+                         depth: int = 0) -> Iterator[Node]:
+    if depth:
+        targets_hit = [isinstance(node, t) for t in targets]
+        if hasattr(node, 'children'):
+            for child in node.children:
+                for nodes in shallow_filter_nodes(child, targets, depth - 1):
+                    yield nodes
+        elif any(targets_hit):
+            yield node
 
 
 def extract_imports(node: Module) -> List[ParsedImport]:
@@ -64,6 +66,8 @@ def extract_imports(node: Module) -> List[ParsedImport]:
 
 
 def extract_statements(node: Node) -> List[ParsedStatement]:
+    for expr_node in shallow_filter_nodes(node, [ExprStmt], 3):
+        pass
     return []
 
 
@@ -85,7 +89,7 @@ def extract(file_name: Path) -> ParsedModule:
     return ParsedModule(name=file_name.name[:-3],
                         path=file_name,
                         docstring=extract_doc(root_node),
-                        imports=extract_imports(root_node),
+                        imports=[],#extract_imports(root_node),
                         statements=extract_statements(root_node),
                         classes=extract_classes(root_node),
                         functions=extract_functions(root_node))
@@ -116,6 +120,22 @@ def test_find_and_extract():
     """Test for recursive files parsing."""
     import itertools
     module_dir = Path('testset/mypy')
-    parsed_modules = list(itertools.islice(find_and_extract(module_dir), 19))
+    parsed_modules = list(itertools.islice(find_and_extract(module_dir), 8))
     assert parsed_modules
-    breakpoint()
+
+
+def test_import():
+    node = parso.parse(
+        'import numpy as np\n'
+        'from city.zoo import dog, cat as spider, chupacabra\n'
+        'from os.path import\\\n'
+        '    exist')
+    imports = extract_imports(node)
+    assert imports[0].from_module == 'numpy'
+    assert imports[0].import_data[2] == ParsedKeyword('as')
+    assert len(imports[1].import_data) == 12
+    assert len(imports[2].import_data) == 6
+
+
+def test_statment():
+    pass
