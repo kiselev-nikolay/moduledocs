@@ -1,13 +1,13 @@
 """Parser based on parso. Returns objects compatible with BaseBuilder class."""
 
 from pathlib import Path
-from typing import List, Iterator, Union
+from typing import List, Iterator, Union, Any
 import parso
 from parso.python.tree import Node, Module, Class, Function, Keyword,\
-    PythonNode, Name, Operator
+    PythonNode, Name, Operator, Import, ImportFrom, ImportName
 from .parsed_objects import ParsedArgument, ParsedClass, ParsedDecorator,\
     ParsedDocstring, ParsedFunction, ParsedImport, ParsedModule,\
-    ParsedParameter, ParsedStatement
+    ParsedParameter, ParsedStatement, ParsedKeyword, ParsedOperator
 
 
 def extract_doc(node: Union[Module, Class, Function]) -> ParsedDocstring:
@@ -21,41 +21,45 @@ def extract_doc(node: Union[Module, Class, Function]) -> ParsedDocstring:
     return ParsedDocstring(doc.strip())
 
 
+def find_nodes(node: Node, target_type: Any) -> Iterator[Node]:
+    has_type_match = isinstance(node, target_type)
+    if not has_type_match and hasattr(node, 'children'):
+        for child in node.children:
+            for target in find_nodes(child, target_type):
+                yield target
+    elif has_type_match:
+        yield node
+
+
+def filter_nodes(node: Node, targets: List[Any]) -> Iterator[Node]:
+    targets_hit = [isinstance(node, t) for t in targets]
+    if hasattr(node, 'children'):
+        for child in node.children:
+            for nodes in filter_nodes(child, targets):
+                yield nodes
+    elif any(targets_hit):
+        yield node
+
+
 def extract_imports(node: Module) -> List[ParsedImport]:
     node_imports = []
     for node_import in node.iter_imports():
-        import_data = dict(import_from=[],
-                           import_import=[],
-                           import_as=[])
-        scan = 'from'
-        for part_node in node_import.children:
-            if isinstance(part_node, Operator):
-                continue
-            if isinstance(part_node, Keyword):
-                keyword = part_node.value
-                if keyword in ['from', 'import', 'as']:
-                    scan = keyword
+        from_module = ''
+        import_data = []
+        for n in filter_nodes(node_import, [Name, Keyword, Operator]):
+            value = n.value
+            if not from_module and isinstance(n, Name):
+                from_module = value
+            if isinstance(n, Name):
+                import_data.append(value)
+            elif isinstance(n, Keyword):
+                import_data.append(ParsedKeyword(value))
+            elif isinstance(n, Operator):
+                import_data.append(ParsedOperator(value))
             else:
-                if isinstance(part_node, Name):
-                    import_data['import_' + scan].append(part_node.value)
-                elif isinstance(part_node, PythonNode):
-                    value = ['']
-                    for child in part_node.children:
-                        if isinstance(child, Operator):
-                            if child.value.strip() == '.':
-                                value[-1] += '.'
-                            elif child.value.strip() == ',':
-                                value.append('')
-                            else:
-                                import_data['import_' + scan].append(
-                                    part_node.get_code())
-                                continue
-                        else:
-                            value[-1] += child.value
-                    import_data['import_' + scan].extend(value)
-                else:
-                    import_data['import_' + scan].append(part_node.get_code())
-        node_imports.append(ParsedImport(**import_data))
+                raise ValueError('Unexpected python code: ' +
+                                 node_import.get_code())
+        node_imports.append(ParsedImport(from_module, import_data))
     return node_imports
 
 

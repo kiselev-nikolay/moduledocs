@@ -1,8 +1,20 @@
 """Objects that can be handled by documentation builder class."""
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Union
 from pathlib import Path
+
+
+@dataclass
+class ParsedOperator:
+
+    value: str
+
+
+@dataclass
+class ParsedKeyword:
+
+    value: str
 
 
 @dataclass
@@ -26,9 +38,8 @@ class ParsedDocstring:
 class ParsedImport:
     """Parsed import from module."""
 
-    import_from: str
-    import_import: List[str]
-    import_as: List[str]
+    from_module: str
+    import_data: List[Union[str, ParsedKeyword, ParsedOperator]]
 
 
 @dataclass
