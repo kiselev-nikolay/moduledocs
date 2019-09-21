@@ -156,12 +156,17 @@ def test_find():
     assert paths
 
 
-def test_find_and_extract():
+def test_extract():
     """Test for recursive files parsing."""
-    import itertools
+    from random import shuffle
     module_dir = Path('testset/mypy')
-    parsed_modules = list(itertools.islice(find_and_extract(module_dir), 8))
+    python_files = list(find_python(module_dir))
+    shuffle(python_files)
+    parsed_modules = []
+    for python_file in python_files[:6]:
+        parsed_modules.append(extract(python_file))
     assert parsed_modules
+    # TODO test better
 
 
 def test_import():
@@ -176,12 +181,13 @@ def test_import():
     assert imports[0].import_data[2] == ParsedKeyword('as')
     assert len(imports[1].import_data) == 12
     assert len(imports[2].import_data) == 6
-    replica = ' '.join([d.value for d in imports[0].import_data])
-    assert replica == 'import numpy as np'
-    replica = ' '.join([d.value for d in imports[2].import_data])
-    assert replica == 'from os . path import exist'
+    replica = imports[0].code()
+    assert replica == code[0]
+    replica = imports[1].code()
+    assert replica == code[1]
 
 
 def test_statment():
     """Test statements extraction."""
+    code = ['']
     pass

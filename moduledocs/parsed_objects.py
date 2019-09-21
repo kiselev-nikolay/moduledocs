@@ -77,7 +77,27 @@ class ParsedImport:
     """Parsed import from module."""
 
     from_module: str
-    import_data: List[Union[str, ParsedKeyword, ParsedOperator]]
+    import_data: List[Union[ParsedName, ParsedKeyword, ParsedOperator]]
+
+    def code(self):
+        import_code = []
+        stick = False
+        for parsed_data in self.import_data:
+            parsed_value = parsed_data.value
+            if isinstance(parsed_data, ParsedKeyword):
+                import_code.append(parsed_value)
+            elif isinstance(parsed_data, ParsedOperator):
+                stick = True
+                if parsed_value == ',':
+                    parsed_value += ' '
+                import_code[-1] += parsed_value
+            elif isinstance(parsed_data, ParsedName):
+                if stick:
+                    stick = False
+                    import_code[-1] += parsed_value
+                else:
+                    import_code.append(parsed_value)
+        return ' '.join(import_code)
 
 
 @dataclass
