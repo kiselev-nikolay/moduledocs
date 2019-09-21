@@ -5,16 +5,55 @@ from typing import List, Union
 from pathlib import Path
 
 
+
+@dataclass
+class ParsedName:
+    """
+    Parsed name.
+
+    Any "variable" is name. For call `spider(9, surname='oleg')` names is
+    [spider, surname]. Used for store code lines as it is it code. Solves the
+    problem of post-processing imports or expressions.
+    """
+
+    value: str
+
+
 @dataclass
 class ParsedOperator:
+    """
+    Parsed operator.
+
+    Used for store code lines as it is it code. Solves the problem of
+    post-processing imports or expressions.
+    """
 
     value: str
 
 
 @dataclass
 class ParsedKeyword:
+    """
+    Parsed keyword.
+
+    Used for store code lines as it is it code. Solves the problem of
+    post-processing imports or expressions.
+    """
 
     value: str
+
+
+@dataclass
+class ParsedArgument:
+    """
+    Parsed argument from call callable.
+
+    Used for store code lines as it is it code. Solves the problem of
+    post-processing imports or expressions.
+    """
+
+    value: str
+    name: str
 
 
 @dataclass
@@ -58,14 +97,6 @@ class ParsedParameter:
     name: str
     annotation: str
     default: str
-
-
-@dataclass
-class ParsedArgument:
-    """Parsed argument from call callable."""
-
-    value: str
-    name: str
 
 
 @dataclass
