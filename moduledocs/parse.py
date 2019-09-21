@@ -163,7 +163,7 @@ def test_extract():
     python_files = list(find_python(module_dir))
     shuffle(python_files)
     parsed_modules = []
-    for python_file in python_files[:6]:
+    for python_file in python_files[:10]:
         parsed_modules.append(extract(python_file))
     assert parsed_modules
     # TODO test better
@@ -189,5 +189,9 @@ def test_import():
 
 def test_statment():
     """Test statements extraction."""
-    code = ['']
+    code = ['x = 200',
+            'y = 11',
+            'a, b = 130, x + y',
+            'print("Henlo")',
+            '']
     pass

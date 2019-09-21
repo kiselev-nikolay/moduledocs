@@ -80,6 +80,7 @@ class ParsedImport:
     import_data: List[Union[ParsedName, ParsedKeyword, ParsedOperator]]
 
     def code(self):
+        """Return code recreation for parsed import."""
         import_code = []
         stick = False
         for parsed_data in self.import_data:
