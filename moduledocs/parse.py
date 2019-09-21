@@ -170,7 +170,7 @@ def test_import():
             'from city.zoo import dog, cat as spider, chupacabra',
             'from os.path import\\',
             '    exist']
-    node = parso.parse("\n".join(code))
+    node = parso.parse('\n'.join(code))
     imports = extract_imports(node)
     assert imports[0].from_module == 'numpy'
     assert imports[0].import_data[2] == ParsedKeyword('as')
