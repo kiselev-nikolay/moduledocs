@@ -5,7 +5,6 @@ from typing import List, Union
 from pathlib import Path
 
 
-
 @dataclass
 class ParsedName:
     """

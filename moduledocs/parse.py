@@ -7,7 +7,7 @@ from parso.python.tree import Node, Module, Class, Function,\
     Keyword, Name, Operator, ExprStmt
 from .parsed_objects import ParsedArgument, ParsedClass, ParsedDecorator,\
     ParsedDocstring, ParsedFunction, ParsedImport, ParsedModule,\
-    ParsedParameter, ParsedStatement, ParsedKeyword, ParsedOperator
+    ParsedParameter, ParsedStatement, ParsedKeyword, ParsedOperator, ParsedName
 
 
 def extract_doc(node: Union[Module, Class, Function]) -> ParsedDocstring:
@@ -57,7 +57,7 @@ def extract_imports(node: Module) -> List[ParsedImport]:
             if not from_module and isinstance(n, Name):
                 from_module = value
             if isinstance(n, Name):
-                import_data.append(value)
+                import_data.append(ParsedName(value))
             elif isinstance(n, Keyword):
                 import_data.append(ParsedKeyword(value))
             elif isinstance(n, Operator):
@@ -166,16 +166,20 @@ def test_find_and_extract():
 
 def test_import():
     """Test imports extraction."""
-    node = parso.parse(
-        'import numpy as np\n'
-        'from city.zoo import dog, cat as spider, chupacabra\n'
-        'from os.path import\\\n'
-        '    exist')
+    code = ['import numpy as np',
+            'from city.zoo import dog, cat as spider, chupacabra',
+            'from os.path import\\',
+            '    exist']
+    node = parso.parse("\n".join(code))
     imports = extract_imports(node)
     assert imports[0].from_module == 'numpy'
     assert imports[0].import_data[2] == ParsedKeyword('as')
     assert len(imports[1].import_data) == 12
     assert len(imports[2].import_data) == 6
+    replica = ' '.join([d.value for d in imports[0].import_data])
+    assert replica == 'import numpy as np'
+    replica = ' '.join([d.value for d in imports[2].import_data])
+    assert replica == 'from os . path import exist'
 
 
 def test_statment():
