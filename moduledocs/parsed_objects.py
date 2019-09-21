@@ -55,19 +55,6 @@ class ParsedLiteral:
 
 
 @dataclass
-class ParsedArgument:
-    """
-    Parsed argument from call callable.
-
-    Used for store code lines as it is it code. Solves the problem of
-    post-processing imports or expressions.
-    """
-
-    value: str
-    name: ParsedName
-
-
-@dataclass
 class ParsedDocstring:
     """
     Parsed docstring from module, class or function.
@@ -135,7 +122,7 @@ class ParsedDecorator:
     """Parsed decorator from class, method of function."""
 
     name: ParsedName
-    factory_parameters: List[ParsedArgument]
+    factory_parameters: List[str]
 
 
 @dataclass
@@ -159,7 +146,7 @@ class ParsedClass:
 
     name: ParsedName
     docstring: ParsedDocstring
-    parent_class: List[ParsedArgument]
+    parent_class: List[str]
     decorators: List[ParsedDecorator]
     variables: List[ParsedStatement]
     methods: List[ParsedFunction]

@@ -6,7 +6,7 @@ from typing import List, Iterator, Union, Any
 import parso
 from parso.python.tree import PythonBaseNode, PythonNode, Module, Class,\
     Function, Keyword, Name, Operator, ExprStmt, Literal
-from .parsed_objects import ParsedArgument, ParsedClass, ParsedDecorator,\
+from .parsed_objects import ParsedClass, ParsedDecorator,\
     ParsedDocstring, ParsedFunction, ParsedImport, ParsedModule,\
     ParsedParameter, ParsedStatement, ParsedKeyword, ParsedOperator,\
     ParsedName, ParsedLiteral
@@ -52,27 +52,21 @@ def shallow_filter_nodes(node: PythonBaseNode,
                     yield nodes
 
 
-def extract_imports(node: Module) -> List[ParsedImport]:
-    """Extract parsed imports from module."""
-    node_imports = []
-    for node_import in node.iter_imports():
-        from_module = ''
-        import_data = []
-        for n in filter_nodes(node_import, [Name, Keyword, Operator]):
-            value = n.value
-            if not from_module and isinstance(n, Name):
-                from_module = value
-            if isinstance(n, Name):
-                import_data.append(ParsedName(value))
-            elif isinstance(n, Keyword):
-                import_data.append(ParsedKeyword(value))
-            elif isinstance(n, Operator):
-                import_data.append(ParsedOperator(value))
-            else:
-                raise ValueError('Unexpected "import" python code: ' +
-                                 node_import.get_code())
-        node_imports.append(ParsedImport(from_module, import_data))
-    return node_imports
+def same_parsed(
+    node: Union[Name, Keyword, Operator, Literal],
+    *values: List[str]
+) -> Union[ParsedName, ParsedKeyword, ParsedOperator, ParsedLiteral]:
+    """Get same object from parsed object."""
+    if isinstance(node, Name):
+        return ParsedName(*values)
+    elif isinstance(node, Keyword):
+        return ParsedKeyword(*values)
+    elif isinstance(node, Operator):
+        return ParsedOperator(*values)
+    elif isinstance(node, Literal):
+        return ParsedLiteral(*values)
+    else:
+        raise Exception('Same not found!')
 
 
 def norm_stmt(node: PythonBaseNode, equation: bool = True) -> List[Any]:
@@ -80,23 +74,42 @@ def norm_stmt(node: PythonBaseNode, equation: bool = True) -> List[Any]:
     statement_data: List[ParsedName] = []
     statement_value: List[Any] = []
     state = copy(equation)
-    for n in filter_nodes(node, [Name, Keyword, Operator, Literal]):
-        v = n.value
-        if isinstance(n, Operator):
-            if state and v == '=':
+    for part in filter_nodes(node, [Name, Keyword, Operator, Literal]):
+        value = part.value
+        if isinstance(part, Operator):
+            if state and value == '=':
                 state = False
-            elif state and v != ',':
-                statement_data.append(v)
+            elif state and value != ',':
+                statement_data.append(value)
             elif not state:
-                statement_value.append(ParsedOperator(v))
-        elif isinstance(n, Name):
+                statement_value.append(ParsedOperator(value))
+        elif isinstance(part, Name):
             if state:
-                statement_data.append(ParsedName(v))
+                statement_data.append(ParsedName(value))
             else:
-                statement_value.append(ParsedName(v))
+                statement_value.append(ParsedName(value))
         elif not state:
-            statement_value.append(ParsedLiteral(v))
+            statement_value.append(ParsedLiteral(value))
     return ParsedStatement(statement_data, statement_value)
+
+
+def extract_imports(node: Module) -> List[ParsedImport]:
+    """Extract parsed imports from module."""
+    node_imports = []
+    for node_import in node.iter_imports():
+        from_module = ''
+        import_data = []
+        for part in filter_nodes(node_import, [Name, Keyword, Operator]):
+            value = part.value
+            if not from_module and isinstance(part, Name):
+                from_module = value
+            if isinstance(part, (Name, Keyword, Operator)):
+                import_data.append(same_parsed(part, value))
+            else:
+                raise ValueError('Unexpected "import" python code: ' +
+                                 node_import.get_code())
+        node_imports.append(ParsedImport(from_module, import_data))
+    return node_imports
 
 
 def extract_statements(node: PythonBaseNode) -> List[ParsedStatement]:
@@ -128,13 +141,33 @@ def extract_params(node: Union[Class, Function]) -> List[ParsedParameter]:
         a: int, b: int = 2
 
     """
-    return []
+    params = []
+    for param in node.get_params():
+        for part in filter_nodes(param, [Name,
+                                         Operator,
+                                         Literal]):
+            params.append(same_parsed(part, part.value))
+    return params
 
 
 def extract_decorators(node: Union[Class, Function]) -> List[ParsedDecorator]:
     """Extract parsed decorators for function, method or class."""
-    ParsedArgument('60', 'x')
-    return []
+    decorators = []
+    for decorator in node.get_decorators():
+        name = []
+        args = []
+        brackets = False
+        for part in filter_nodes(decorator, [Name,
+                                             Operator,
+                                             Literal]):
+            if part.value in '()' and isinstance(part, Operator):
+                brackets = True
+            elif brackets:
+                args.append(same_parsed(part, part.value))
+            elif not brackets:
+                name.append(part.value)
+        decorators.append(ParsedDecorator(''.join(name), args))
+    return decorators
 
 
 def extract_functions(node: Union[Module, Class]) -> List[ParsedFunction]:
@@ -155,8 +188,8 @@ def extract_functions(node: Union[Module, Class]) -> List[ParsedFunction]:
         functions.append(ParsedFunction(
             name=ParsedName(function_node.name),
             docstring=extract_doc(function_node),
-            paramenters=extract_params(function_node),  # TODO
-            decorators=extract_decorators(function_node),  # TODO
+            paramenters=extract_params(function_node),
+            decorators=extract_decorators(function_node),
             return_annotation=ParsedName('', annotation=f_annotation),
             returns=f_return,
             yields=f_yield,
@@ -166,7 +199,7 @@ def extract_functions(node: Union[Module, Class]) -> List[ParsedFunction]:
 
 def extract_classes(node: Module) -> List[ParsedClass]:
     """Extract parsed classes from node."""
-    # TODO
+    # TODO classes
     return []
 
 
