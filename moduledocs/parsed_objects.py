@@ -1,7 +1,7 @@
 """Objects that can be handled by documentation builder class."""
 
 from dataclasses import dataclass
-from typing import List, Union
+from typing import List, Union, Any
 from pathlib import Path
 
 
@@ -16,6 +16,7 @@ class ParsedName:
     """
 
     value: str
+    annotation: str = ''
 
 
 @dataclass
@@ -37,6 +38,17 @@ class ParsedKeyword:
 
     Used for store code lines as it is it code. Solves the problem of
     post-processing imports or expressions.
+    """
+
+    value: str
+
+
+@dataclass
+class ParsedLiteral:
+    """
+    Parsed Literal.
+
+    Used for difine "strings", numbers as 1 or 2.4.
     """
 
     value: str
@@ -65,6 +77,7 @@ class ParsedDocstring:
     """
 
     raw: str
+    doc: str = ''
 
     def __post_init__(self):
         """Render markdown or ReST  docstring."""
@@ -105,9 +118,8 @@ class ParsedImport:
 class ParsedStatement:
     """Parsed statement from class or module."""
 
-    name: ParsedName
-    annotation: ParsedName
-    value: str
+    name: List[ParsedName]
+    value: List[Any]
 
 
 @dataclass
@@ -115,7 +127,6 @@ class ParsedParameter:
     """Parsed parameter from class, method or funcion definition."""
 
     name: ParsedName
-    annotation: ParsedName
     default: str
 
 
@@ -135,7 +146,11 @@ class ParsedFunction:
     docstring: ParsedDocstring
     paramenters: List[ParsedParameter]
     decorators: List[ParsedDecorator]
-    returns: ParsedName
+    return_annotation: ParsedName
+    returns: List[Any]
+    yields: List[Any]
+    raises: List[Any]
+    # TODO Decide parse or not nested class or func
 
 
 @dataclass
@@ -148,6 +163,7 @@ class ParsedClass:
     decorators: List[ParsedDecorator]
     variables: List[ParsedStatement]
     methods: List[ParsedFunction]
+    # TODO Decide parse or not nested class
 
 
 @dataclass

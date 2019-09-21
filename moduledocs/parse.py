@@ -1,13 +1,15 @@
 """Parser based on parso. Returns objects compatible with BaseBuilder class."""
 
 from pathlib import Path
-from typing import List, Iterator, Dict, Union, Any
+from copy import copy
+from typing import List, Iterator, Union, Any
 import parso
 from parso.python.tree import PythonBaseNode, PythonNode, Module, Class,\
     Function, Keyword, Name, Operator, ExprStmt, Literal
 from .parsed_objects import ParsedArgument, ParsedClass, ParsedDecorator,\
     ParsedDocstring, ParsedFunction, ParsedImport, ParsedModule,\
-    ParsedParameter, ParsedStatement, ParsedKeyword, ParsedOperator, ParsedName
+    ParsedParameter, ParsedStatement, ParsedKeyword, ParsedOperator,\
+    ParsedName, ParsedLiteral
 
 
 def extract_doc(node: Union[Module, Class, Function]) -> ParsedDocstring:
@@ -73,6 +75,30 @@ def extract_imports(node: Module) -> List[ParsedImport]:
     return node_imports
 
 
+def norm_stmt(node: PythonBaseNode, equation: bool = True) -> List[Any]:
+    """Statement normalization function."""
+    statement_data: List[ParsedName] = []
+    statement_value: List[Any] = []
+    state = copy(equation)
+    for n in filter_nodes(node, [Name, Keyword, Operator, Literal]):
+        v = n.value
+        if isinstance(n, Operator):
+            if state and v == '=':
+                state = False
+            elif state and v != ',':
+                statement_data.append(v)
+            elif not state:
+                statement_value.append(ParsedOperator(v))
+        elif isinstance(n, Name):
+            if state:
+                statement_data.append(ParsedName(v))
+            else:
+                statement_value.append(ParsedName(v))
+        elif not state:
+            statement_value.append(ParsedLiteral(v))
+    return ParsedStatement(statement_data, statement_value)
+
+
 def extract_statements(node: PythonBaseNode) -> List[ParsedStatement]:
     """
     Extract parsed statements from module.
@@ -86,31 +112,7 @@ def extract_statements(node: PythonBaseNode) -> List[ParsedStatement]:
     statements = []
     for statement_node in shallow_filter_nodes(node, [ExprStmt], 3,
                                                examine=False):
-        statement_data: Dict[str, List[str]] = {}
-        statement_data_order: List[str] = []
-        state = True
-        order = 0
-        for n in filter_nodes(statement_node,
-                              [Name, Keyword, Operator, Literal]):
-            v = n.value
-            if isinstance(n, Operator):
-                if v == '=':
-                    state = False
-                elif v == ',':
-                    if not state:
-                        order += 1
-                else:
-                    write = statement_data[statement_data_order[order]]
-                    write.append(v)
-            elif isinstance(n, (Name, Literal)):
-                if state:
-                    statement_data_order.append(v)
-                    statement_data[v] = []
-                else:
-                    write = statement_data[statement_data_order[order]]
-                    write.append(v)
-        for n, v in statement_data.items():
-            statements.append(ParsedStatement(n, None, ' '.join(v)))
+        statements.append(norm_stmt(statement_node))
     return statements
 
 
@@ -137,11 +139,34 @@ def extract_decorators(node: Union[Class, Function]) -> List[ParsedDecorator]:
 
 def extract_functions(node: Union[Module, Class]) -> List[ParsedFunction]:
     """Extract parsed functions from node."""
-    return []
+    functions = []
+    for function_node in node.iter_funcdefs():
+        f_annotation = function_node.annotation
+        if f_annotation:
+            f_annotation = f_annotation.get_code()
+        else:
+            f_annotation = ''
+        f_return = [norm_stmt(i, False)
+                    for i in function_node.iter_return_stmts()]
+        f_yield = [norm_stmt(i, False)
+                   for i in function_node.iter_yield_exprs()]
+        f_raise = [norm_stmt(i, False)
+                   for i in function_node.iter_raise_stmts()]
+        functions.append(ParsedFunction(
+            name=ParsedName(function_node.name),
+            docstring=extract_doc(function_node),
+            paramenters=extract_params(function_node),  # TODO
+            decorators=extract_decorators(function_node),  # TODO
+            return_annotation=ParsedName('', annotation=f_annotation),
+            returns=f_return,
+            yields=f_yield,
+            raises=f_raise))
+    return functions
 
 
 def extract_classes(node: Module) -> List[ParsedClass]:
     """Extract parsed classes from node."""
+    # TODO
     return []
 
 
@@ -179,9 +204,6 @@ def find_and_extract(base: Path) -> Iterator[ParsedModule]:
         yield extract(python_file)
 
 
-# TESTS
-
-
 def test_find():
     """Test for recursive python files search."""
     module_dir = Path('testset/mypy')
@@ -191,7 +213,6 @@ def test_find():
 
 def test_extract():
     """Test for recursive files parsing."""
-    return
     from random import shuffle
     module_dir = Path('testset/mypy')
     python_files = list(find_python(module_dir))
@@ -230,4 +251,4 @@ def test_statement():
             'x: int = 1']
     module = parso.parse('\n'.join(code))
     statements = extract_statements(module)
-    assert len(statements) == 7
+    assert len(statements) == 5
