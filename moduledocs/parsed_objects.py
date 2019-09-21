@@ -52,7 +52,7 @@ class ParsedArgument:
     """
 
     value: str
-    name: str
+    name: ParsedName
 
 
 @dataclass
@@ -105,17 +105,17 @@ class ParsedImport:
 class ParsedStatement:
     """Parsed statement from class or module."""
 
-    name: str
+    name: ParsedName
+    annotation: ParsedName
     value: str
-    annotation: str
 
 
 @dataclass
 class ParsedParameter:
     """Parsed parameter from class, method or funcion definition."""
 
-    name: str
-    annotation: str
+    name: ParsedName
+    annotation: ParsedName
     default: str
 
 
@@ -123,7 +123,7 @@ class ParsedParameter:
 class ParsedDecorator:
     """Parsed decorator from class, method of function."""
 
-    name: str
+    name: ParsedName
     factory_parameters: List[ParsedArgument]
 
 
@@ -131,18 +131,18 @@ class ParsedDecorator:
 class ParsedFunction:
     """Parsed function or method."""
 
-    name: str
+    name: ParsedName
     docstring: ParsedDocstring
     paramenters: List[ParsedParameter]
     decorators: List[ParsedDecorator]
-    returns: str
+    returns: ParsedName
 
 
 @dataclass
 class ParsedClass:
     """Parsed class."""
 
-    name: str
+    name: ParsedName
     docstring: ParsedDocstring
     parent_class: List[ParsedArgument]
     decorators: List[ParsedDecorator]
@@ -154,7 +154,7 @@ class ParsedClass:
 class ParsedModule:
     """Parsed module."""
 
-    name: str
+    name: ParsedName
     path: Path
     docstring: ParsedDocstring
     imports: List[ParsedImport]

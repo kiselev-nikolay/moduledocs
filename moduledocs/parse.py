@@ -1,10 +1,10 @@
 """Parser based on parso. Returns objects compatible with BaseBuilder class."""
 
 from pathlib import Path
-from typing import List, Iterator, Union, Any
+from typing import List, Iterator, Dict, Union, Any
 import parso
-from parso.python.tree import Node, Module, Class, Function,\
-    Keyword, Name, Operator, ExprStmt
+from parso.python.tree import PythonBaseNode, PythonNode, Module, Class,\
+    Function, Keyword, Name, Operator, ExprStmt, Literal
 from .parsed_objects import ParsedArgument, ParsedClass, ParsedDecorator,\
     ParsedDocstring, ParsedFunction, ParsedImport, ParsedModule,\
     ParsedParameter, ParsedStatement, ParsedKeyword, ParsedOperator, ParsedName
@@ -22,28 +22,32 @@ def extract_doc(node: Union[Module, Class, Function]) -> ParsedDocstring:
     return ParsedDocstring(doc.strip())
 
 
-def filter_nodes(node: Node, targets: List[Any]) -> Iterator[Node]:
+def filter_nodes(node: PythonBaseNode,
+                 targets: List[Any]) -> Iterator[PythonBaseNode]:
     """Recursive find every node with target type."""
     targets_hit = [isinstance(node, t) for t in targets]
-    if hasattr(node, 'children'):
+    if any(targets_hit):
+        yield node
+    elif hasattr(node, 'children'):
         for child in node.children:
             for nodes in filter_nodes(child, targets):
                 yield nodes
-    elif any(targets_hit):
-        yield node
 
 
-def shallow_filter_nodes(node: Node, targets: List[Any],
-                         depth: int = 0) -> Iterator[Node]:
+def shallow_filter_nodes(node: PythonBaseNode,
+                         targets: List[Any],
+                         depth: int = 2,
+                         examine: bool = True) -> Iterator[PythonBaseNode]:
     """Recursive find every node with target type with depth limit."""
     if depth:
         targets_hit = [isinstance(node, t) for t in targets]
-        if hasattr(node, 'children'):
+        if any(targets_hit):
+            yield node
+        elif isinstance(node, (Module, PythonNode)) or (
+             examine and hasattr(node, 'children')):
             for child in node.children:
                 for nodes in shallow_filter_nodes(child, targets, depth - 1):
                     yield nodes
-        elif any(targets_hit):
-            yield node
 
 
 def extract_imports(node: Module) -> List[ParsedImport]:
@@ -69,7 +73,7 @@ def extract_imports(node: Module) -> List[ParsedImport]:
     return node_imports
 
 
-def extract_statements(node: Node) -> List[ParsedStatement]:
+def extract_statements(node: PythonBaseNode) -> List[ParsedStatement]:
     """
     Extract parsed statements from module.
 
@@ -79,12 +83,38 @@ def extract_statements(node: Node) -> List[ParsedStatement]:
     nice = True
 
     """
-    for expr_node in shallow_filter_nodes(node, [ExprStmt], 3):
-        pass
-    return []
+    statements = []
+    for statement_node in shallow_filter_nodes(node, [ExprStmt], 3,
+                                               examine=False):
+        statement_data: Dict[str, List[str]] = {}
+        statement_data_order: List[str] = []
+        state = True
+        order = 0
+        for n in filter_nodes(statement_node,
+                              [Name, Keyword, Operator, Literal]):
+            v = n.value
+            if isinstance(n, Operator):
+                if v == '=':
+                    state = False
+                elif v == ',':
+                    if not state:
+                        order += 1
+                else:
+                    write = statement_data[statement_data_order[order]]
+                    write.append(v)
+            elif isinstance(n, (Name, Literal)):
+                if state:
+                    statement_data_order.append(v)
+                    statement_data[v] = []
+                else:
+                    write = statement_data[statement_data_order[order]]
+                    write.append(v)
+        for n, v in statement_data.items():
+            statements.append(ParsedStatement(n, None, ' '.join(v)))
+    return statements
 
 
-def extract_params(node: Node) -> List[ParsedParameter]:
+def extract_params(node: Union[Class, Function]) -> List[ParsedParameter]:
     """
     Extract parsed parameters from node.
 
@@ -99,18 +129,18 @@ def extract_params(node: Node) -> List[ParsedParameter]:
     return []
 
 
-def extract_decorators(node: Node) -> List[ParsedDecorator]:
+def extract_decorators(node: Union[Class, Function]) -> List[ParsedDecorator]:
     """Extract parsed decorators for function, method or class."""
     ParsedArgument('60', 'x')
     return []
 
 
-def extract_functions(node: Node) -> List[ParsedFunction]:
+def extract_functions(node: Union[Module, Class]) -> List[ParsedFunction]:
     """Extract parsed functions from node."""
     return []
 
 
-def extract_classes(node: Node) -> List[ParsedClass]:
+def extract_classes(node: Module) -> List[ParsedClass]:
     """Extract parsed classes from node."""
     return []
 
@@ -119,7 +149,7 @@ def extract(file_name: Path) -> ParsedModule:
     """Extract parsed module from file by path."""
     with open(file_name.absolute()) as file:
         root_node = parso.parse(file.read())
-    return ParsedModule(name=file_name.name[:-3],
+    return ParsedModule(name=ParsedName(file_name.name[:-3]),
                         path=file_name,
                         docstring=extract_doc(root_node),
                         imports=extract_imports(root_node),
@@ -149,6 +179,9 @@ def find_and_extract(base: Path) -> Iterator[ParsedModule]:
         yield extract(python_file)
 
 
+# TESTS
+
+
 def test_find():
     """Test for recursive python files search."""
     module_dir = Path('testset/mypy')
@@ -158,6 +191,7 @@ def test_find():
 
 def test_extract():
     """Test for recursive files parsing."""
+    return
     from random import shuffle
     module_dir = Path('testset/mypy')
     python_files = list(find_python(module_dir))
@@ -166,7 +200,6 @@ def test_extract():
     for python_file in python_files[:10]:
         parsed_modules.append(extract(python_file))
     assert parsed_modules
-    # TODO test better
 
 
 def test_import():
@@ -175,8 +208,8 @@ def test_import():
             'from city.zoo import dog, cat as spider, chupacabra',
             'from os.path import\\',
             '    exist']
-    node = parso.parse('\n'.join(code))
-    imports = extract_imports(node)
+    module = parso.parse('\n'.join(code))
+    imports = extract_imports(module)
     assert imports[0].from_module == 'numpy'
     assert imports[0].import_data[2] == ParsedKeyword('as')
     assert len(imports[1].import_data) == 12
@@ -187,11 +220,14 @@ def test_import():
     assert replica == code[1]
 
 
-def test_statment():
+def test_statement():
     """Test statements extraction."""
     code = ['x = 200',
-            'y = 11',
+            'y = pow(3)',
             'a, b = 130, x + y',
             'print("Henlo")',
-            '']
-    pass
+            'HTTP = os.environ["HTTP"]',
+            'x: int = 1']
+    module = parso.parse('\n'.join(code))
+    statements = extract_statements(module)
+    assert len(statements) == 7
