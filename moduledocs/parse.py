@@ -147,6 +147,7 @@ def extract_params(node: Union[Class, Function]) -> List[ParsedParameter]:
                                          Operator,
                                          Literal]):
             params.append(same_parsed(part, part.value))
+            # TODO Parsed parameter!!
     return params
 
 
@@ -199,7 +200,20 @@ def extract_functions(node: Union[Module, Class]) -> List[ParsedFunction]:
 
 def extract_classes(node: Module) -> List[ParsedClass]:
     """Extract parsed classes from node."""
-    # TODO classes
+    for class_node in node.iter_classdefs():
+        class_arg = class_node.get_super_arglist()
+        if class_arg:
+            if isinstance(class_arg, Name):
+                class_arg = class_arg.value
+            else:
+                class_arg = '.'.join([n.value for n in filter_nodes(class_arg,
+                                                                    [Name])])
+        ParsedClass(name=ParsedName(class_node.name.value),
+                    docstring=extract_doc(class_node),
+                    parent_class=class_arg,
+                    decorators=extract_decorators(class_node),
+                    variables=extract_statements(class_node),
+                    methods=extract_functions(class_node))
     return []
 
 

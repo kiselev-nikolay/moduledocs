@@ -114,7 +114,7 @@ class ParsedParameter:
     """Parsed parameter from class, method or funcion definition."""
 
     name: ParsedName
-    default: str
+    default: List[Any]
 
 
 @dataclass
@@ -122,7 +122,7 @@ class ParsedDecorator:
     """Parsed decorator from class, method of function."""
 
     name: ParsedName
-    factory_parameters: List[str]
+    factory_parameters: List[Any]  # TODO parsed arguments
 
 
 @dataclass
@@ -137,7 +137,7 @@ class ParsedFunction:
     returns: List[Any]
     yields: List[Any]
     raises: List[Any]
-    # TODO Decide parse or not nested class or func
+    # TODO Parse or not nested class or func
 
 
 @dataclass
@@ -146,11 +146,11 @@ class ParsedClass:
 
     name: ParsedName
     docstring: ParsedDocstring
-    parent_class: List[str]
+    parent_class: List[Any]  # TODO parsed arguments
     decorators: List[ParsedDecorator]
     variables: List[ParsedStatement]
     methods: List[ParsedFunction]
-    # TODO Decide parse or not nested class
+    # TODO Parse or not nested class
 
 
 @dataclass
