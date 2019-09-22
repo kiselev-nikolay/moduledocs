@@ -9,4 +9,4 @@ install:
 - cd ..
 script:
 - pipenv run flake8 moduledocs/*
-- pipenv run pytest moduledocs/*
+- pipenv run pytest test.py
