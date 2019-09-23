@@ -5,7 +5,8 @@ from .parse import find_and_extract
 from .style_markdown import MarkdownBuilder
 
 
-def cli(input_directory: str, output_directory: str = 'docs', style: str = 'md'):
+def cli(input_directory: str, output_directory: str = 'docs',
+        style: str = 'md'):
     """
     Moduledocs.
 
