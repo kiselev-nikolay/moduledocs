@@ -1,6 +1,6 @@
 """Base documentation builder class."""
 
-from typing import List
+from typing import List, Dict, Tuple
 from pathlib import Path
 from abc import ABC, abstractmethod
 from .parsed_objects import ParsedModule
@@ -17,20 +17,42 @@ class BaseBuilder(ABC):
         """Builder settings for parsed module."""
         self.e = '.txt'
 
+    @abstractmethod
+    def index(self, index_items: List[str]) -> str:
+        """Render index as text."""
+        return '\n'.join(index_items)
+
     def build(self, modules: List[ParsedModule]):
         """Build for parsed module."""
+        self.texts: List[Tuple[Path, str]] = []
+        self.indexes: Dict[Path, List[Path]] = dict()
         for module in modules:
-            self.feed(module)
+            module_dir = module.path.parent
+            if not self.indexes.get(module_dir):
+                self.indexes[module_dir] = [module.path]
+            else:
+                self.indexes[module_dir].append(module.path)
+            module_text = self.feed(module)
+            self.texts.append((module.path, module_text))
+        total_index: List[str] = []
+        for folder, index in self.indexes.items():
+            index_str_paths = [str(i) for i in index]
+            self.texts.append((folder / 'index', self.index(index_str_paths)))
+            total_index.extend(index_str_paths)
+        self.texts.append((Path('index'), self.index(total_index)))
 
     @abstractmethod
     def feed(self, module: ParsedModule):
         """Convert ParsedModule to a string and stores it in self.text."""
-        self.text = ''
+        return module.name.value
 
-    def save(self, path: Path):
+    def save(self, docs_path: Path):
         """Save file at location specified on init."""
-        if not path.exists():
-            path.mkdir(parents=True, exist_ok=True)
-        save_path = path.joinpath('test{}'.format(self.e)).absolute()
-        with open(save_path, 'w') as file:
-            file.write(self.text)
+        for path, text in self.texts:
+            path = docs_path / path
+            print(path)
+            if not path.parent.exists():
+                path.parent.mkdir(parents=True, exist_ok=True)
+            save_path = '{}{}'.format(path.absolute(), self.e)
+            with open(save_path, 'w') as file:
+                file.write(text)
