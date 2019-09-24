@@ -83,7 +83,7 @@ class ParsedImport:
     from_module: str
     import_data: List[Union[ParsedName, ParsedKeyword, ParsedOperator]]
 
-    def code(self):
+    def code(self) -> str:
         """Return code recreation for parsed import."""
         import_code = []
         stick = False
@@ -113,7 +113,7 @@ class ParsedStatement:
 
     name: List[ParsedName]
     value: List[Any]
-    
+
     def code(self):
         """Return code recreation for parsed statement."""
         full_name = ''.join([n.value for n in self.name])
@@ -143,12 +143,20 @@ class ParsedFunction:
 
     name: ParsedName
     docstring: ParsedDocstring
-    paramenters: List[ParsedParameter]
+    paramenters: List[Any]
     decorators: List[ParsedDecorator]
     return_annotation: ParsedName
     returns: List[Any]
     yields: List[Any]
     raises: List[Any]
+
+    def code_param(self) -> str:
+        """Return code recreation for parsed function parameters."""
+        code = ''.join([p.value for p in self.paramenters])
+        code = code.replace(',', ', ')
+        code = code.replace(':', ': ')
+        code = '({})'.format(code)
+        return code
     # TODO Parse or not nested class or func
 
 

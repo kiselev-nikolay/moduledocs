@@ -187,7 +187,7 @@ def extract_functions(node: Union[Module, Class]) -> List[ParsedFunction]:
         f_raise = [norm_stmt(i, False)
                    for i in function_node.iter_raise_stmts()]
         functions.append(ParsedFunction(
-            name=ParsedName(function_node.name),
+            name=ParsedName(function_node.name.value),
             docstring=extract_doc(function_node),
             paramenters=extract_params(function_node),
             decorators=extract_decorators(function_node),
@@ -200,6 +200,7 @@ def extract_functions(node: Union[Module, Class]) -> List[ParsedFunction]:
 
 def extract_classes(node: Module) -> List[ParsedClass]:
     """Extract parsed classes from node."""
+    classes = []
     for class_node in node.iter_classdefs():
         class_arg = class_node.get_super_arglist()
         if class_arg:
@@ -208,13 +209,13 @@ def extract_classes(node: Module) -> List[ParsedClass]:
             else:
                 class_arg = '.'.join([n.value for n in filter_nodes(class_arg,
                                                                     [Name])])
-        ParsedClass(name=ParsedName(class_node.name.value),
-                    docstring=extract_doc(class_node),
-                    parent_class=class_arg,
-                    decorators=extract_decorators(class_node),
-                    variables=extract_statements(class_node),
-                    methods=extract_functions(class_node))
-    return []
+        classes.append(ParsedClass(name=ParsedName(class_node.name.value),
+                                   docstring=extract_doc(class_node),
+                                   parent_class=class_arg,
+                                   decorators=extract_decorators(class_node),
+                                   variables=extract_statements(class_node),
+                                   methods=extract_functions(class_node)))
+    return classes
 
 
 def extract(file_name: Path) -> ParsedModule:
