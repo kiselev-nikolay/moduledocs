@@ -67,7 +67,11 @@ class ParsedDocstring:
     doc: str = ''
 
     def __post_init__(self):
-        """Render markdown or ReST  docstring."""
+        """
+        Magic post processing on module data.
+
+        Render markdown or ReST docstring.
+        """
         # TODO process markdown or rst in docstring
         self.doc = self.raw
 
@@ -98,6 +102,8 @@ class ParsedImport:
                     import_code[-1] += parsed_value
                 else:
                     import_code.append(parsed_value)
+        if 'from.' in import_code[0]:
+            import_code[0] = import_code[0].replace('from.', 'from .', 1)
         return ' '.join(import_code)
 
 
@@ -107,6 +113,12 @@ class ParsedStatement:
 
     name: List[ParsedName]
     value: List[Any]
+    
+    def code(self):
+        """Return code recreation for parsed statement."""
+        full_name = ''.join([n.value for n in self.name])
+        full_value = ''.join([n.value for n in self.value])
+        return '{} = {}'.format(full_name, full_value)
 
 
 @dataclass

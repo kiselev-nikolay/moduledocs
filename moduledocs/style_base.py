@@ -4,6 +4,7 @@ from typing import List, Dict, Tuple
 from pathlib import Path
 from abc import ABC, abstractmethod
 from .parsed_objects import ParsedModule
+import warnings
 
 
 class BaseBuilder(ABC):
@@ -16,6 +17,7 @@ class BaseBuilder(ABC):
     def setting(self, **kwargs):
         """Builder settings for parsed module."""
         self.e = '.txt'
+        self.i = True
 
     @abstractmethod
     def index(self, index_items: List[str]) -> str:
@@ -24,6 +26,9 @@ class BaseBuilder(ABC):
 
     def build(self, modules: List[ParsedModule]):
         """Build for parsed module."""
+        if not hasattr(self, 'e') or not getattr(self, 'e'):
+            warnings.warn('Using default building setting.', RuntimeWarning)
+            self.setting()
         self.texts: List[Tuple[Path, str]] = []
         self.indexes: Dict[Path, List[Path]] = dict()
         for module in modules:
@@ -34,12 +39,14 @@ class BaseBuilder(ABC):
                 self.indexes[module_dir].append(module.path)
             module_text = self.feed(module)
             self.texts.append((module.path, module_text))
-        total_index: List[str] = []
-        for folder, index in self.indexes.items():
-            index_str_paths = [str(i) for i in index]
-            self.texts.append((folder / 'index', self.index(index_str_paths)))
-            total_index.extend(index_str_paths)
-        self.texts.append((Path('index'), self.index(total_index)))
+        if hasattr(self, 'i') and self.i:
+            total_index: List[str] = []
+            for folder, index in self.indexes.items():
+                index_str_paths = [str(i) for i in index]
+                self.texts.append((folder / 'index',
+                                   self.index(index_str_paths)))
+                total_index.extend(index_str_paths)
+            self.texts.append((Path('index'), self.index(total_index)))
 
     @abstractmethod
     def feed(self, module: ParsedModule):
@@ -50,7 +57,6 @@ class BaseBuilder(ABC):
         """Save file at location specified on init."""
         for path, text in self.texts:
             path = docs_path / path
-            print(path)
             if not path.parent.exists():
                 path.parent.mkdir(parents=True, exist_ok=True)
             save_path = '{}{}'.format(path.absolute(), self.e)
