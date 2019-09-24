@@ -14,7 +14,7 @@ class MarkdownBuilder(BaseBuilder):
 
     def index(self, index_items: List[str]) -> str:
         """Render index as text."""
-        return '[{0}]({0})'.format(index_items)
+        return '\n'.join(['[{0}]({0})'.format(i) for i in index_items])
 
     def feed(self, module: ParsedModule) -> str:
         """Convert ParsedModule to a string and stores it in self.text."""

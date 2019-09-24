@@ -1,1 +1,6 @@
-[['moduledocs/parse.py', 'moduledocs/parsed_objects.py', 'moduledocs/__init__.py', 'moduledocs/style_markdown.py', 'moduledocs/cli.py', 'moduledocs/style_base.py']](['moduledocs/parse.py', 'moduledocs/parsed_objects.py', 'moduledocs/__init__.py', 'moduledocs/style_markdown.py', 'moduledocs/cli.py', 'moduledocs/style_base.py'])
+[moduledocs/parse.py](moduledocs/parse.py)
+[moduledocs/parsed_objects.py](moduledocs/parsed_objects.py)
+[moduledocs/__init__.py](moduledocs/__init__.py)
+[moduledocs/style_markdown.py](moduledocs/style_markdown.py)
+[moduledocs/cli.py](moduledocs/cli.py)
+[moduledocs/style_base.py](moduledocs/style_base.py)
