@@ -3,6 +3,7 @@
 from pathlib import Path
 from copy import copy
 from typing import List, Iterator, Union, Any
+from textwrap import dedent
 import parso
 from parso.python.tree import PythonBaseNode, PythonNode, Module, Class,\
     Function, Keyword, Name, Operator, ExprStmt, Literal
@@ -16,9 +17,8 @@ def extract_doc(node: Union[Module, Class, Function]) -> ParsedDocstring:
     """Extract parsed docstring from module, class or function."""
     doc_node = node.get_doc_node()
     if doc_node:
-        doc = eval(doc_node.value)
-        # eval function is way to extract docstring exacly as anyone want to
-        # injections cannot be here, because parso search only for docstring
+        doc = doc_node.value.strip(' \t\n\r\x0b\x0c\'"')
+        doc = dedent(doc)
     else:
         doc = ''
     return ParsedDocstring(doc.strip())
