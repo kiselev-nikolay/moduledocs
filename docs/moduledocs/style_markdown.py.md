@@ -1,12 +1,42 @@
 # Style markdown
 
+
+
+  + [Style markdown](#style-markdown)
+
+    + [Require](#require)
+
+    + [Docstring](#docstring)
+
+    + [Configuration](#configuration)
+
+      + [Imports](#imports)
+
+    + [Classes](#classes)
+
+      + [MarkdownBuilder](#markdownbuilder)
+
+        + [\_escape](#_escape)
+
+        + [\_line](#_line)
+
+        + [\_append](#_append)
+
+        + [setting](#setting)
+
+        + [index](#index)
+
+        + [\_local\_link](#_local_link)
+
+        + [\_feed\_func](#_feed_func)
+
+        + [feed](#feed)
+
+
+
 ## Require
 
-1. typing
-
-1. style\_base
-
-1. parsed\_objects
+_typing, copy, string, style\_base, parsed\_objects_ 
 
 ## Docstring
 
@@ -16,7 +46,11 @@ Markdown documentation builder class.
 
 ### Imports
 
-`from typing import List, Union`
+`from typing import List, Union, Tuple`
+
+`from copy import copy`
+
+`from string import ascii_lowercase`
 
 `from .style_base import BaseBuilder`
 
@@ -28,61 +62,43 @@ Markdown documentation builder class.
 
 Markdown builder for parsed.
 
-#### \_escape __(text: str)__
 
-_return_ str
 
-{0}
+#### _escape
 
-------
+__(body: str)__ -> __str__ 
 
-#### \_line __(self, text: str, style: str, escape: bool=)__
+#### _line
 
-_return_ str
+__(self, body: str, style: str, escape: bool = True)__ -> __str__ 
 
-{0}
+#### _append
 
-------
+__(self, body: str, style: str)__ -> __str__ 
 
-#### \_append __(self, text: str, style: str)__
+#### setting
 
-_return_ str
-
-{0}
-
-------
-
-#### setting __(self, include\_index: bool=, **kwags)__
-
-_return_ {0}
+__(self, include\_index: bool = True, **kwags)__ 
 
 Builder settings for parsed module.
 
-------
+#### index
 
-#### index __(self, index\_items: List[str])__
+__(self, index\_items: List[str])__ -> __str__ 
 
-_return_ str
+Render index as string.
 
-Render index as text.
+#### _local_link
 
-------
+__(self, name: str)__ -> __str__ 
 
-#### \_feed\_func __(self, functions: List[Union[ParsedModule, ParsedClass]], name\_style: str)__
+#### _feed_func
 
-_return_ str
+__(self, functions: List[Union[ParsedModule, ParsedClass]], name\_style: str)__ -> __str__ 
 
-{0}
+#### feed
 
-------
+__(self, module: ParsedModule)__ -> __str__ 
 
-#### feed __(self, module: ParsedModule)__
-
-_return_ str
-
-Convert ParsedModule to a string and stores it in self.text.
-
-------
-
-------
+Convert ParsedModule to a string and return it.
 

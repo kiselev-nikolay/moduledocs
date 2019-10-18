@@ -145,7 +145,8 @@ def extract_params(node: Union[Class, Function]) -> List[ParsedParameter]:
     for param in node.get_params():
         for part in filter_nodes(param, [Name,
                                          Operator,
-                                         Literal]):
+                                         Literal,
+                                         Keyword]):
             params.append(same_parsed(part, part.value))
             # TODO Parsed parameter!!
     return params

@@ -1,16 +1,52 @@
 # Parse
 
+
+
+  + [Parse](#parse)
+
+    + [Require](#require)
+
+    + [Docstring](#docstring)
+
+    + [Configuration](#configuration)
+
+      + [Imports](#imports)
+
+    + [Functions](#functions)
+
+      + [extract\_doc](#extract_doc)
+
+      + [filter\_nodes](#filter_nodes)
+
+      + [shallow\_filter\_nodes](#shallow_filter_nodes)
+
+      + [same\_parsed](#same_parsed)
+
+      + [norm\_stmt](#norm_stmt)
+
+      + [extract\_imports](#extract_imports)
+
+      + [extract\_statements](#extract_statements)
+
+      + [extract\_params](#extract_params)
+
+      + [extract\_decorators](#extract_decorators)
+
+      + [extract\_functions](#extract_functions)
+
+      + [extract\_classes](#extract_classes)
+
+      + [extract](#extract)
+
+      + [find\_python](#find_python)
+
+      + [find\_and\_extract](#find_and_extract)
+
+
+
 ## Require
 
-1. pathlib
-
-1. copy
-
-1. typing
-
-1. parso
-
-1. parsed\_objects
+_pathlib, copy, typing, textwrap, parso, parsed\_objects_ 
 
 ## Docstring
 
@@ -26,6 +62,8 @@ Parser based on parso. Returns objects compatible with BaseBuilder class.
 
 `from typing import List, Iterator, Union, Any`
 
+`from textwrap import dedent`
+
 `import parso`
 
 `from parso.python.tree import PythonBaseNode, PythonNode, Module, Class, Function, Keyword, Name, Operator, ExprStmt, Literal`
@@ -34,57 +72,47 @@ Parser based on parso. Returns objects compatible with BaseBuilder class.
 
 ## Functions
 
-### extract\_doc __(node: Union[Module, Class, Function])__
 
-_return_ ParsedDocstring
+
+### extract_doc
+
+__(node: Union[Module, Class, Function])__ -> __ParsedDocstring__ 
 
 Extract parsed docstring from module, class or function.
 
-------
+### filter_nodes
 
-### filter\_nodes __(node: PythonBaseNode, targets: List[Any])__
-
-_return_ Iterator[PythonBaseNode]
+__(node: PythonBaseNode, targets: List[Any])__ -> __Iterator[PythonBaseNode]__ 
 
 Recursive find every node with target type.
 
-------
+### shallow_filter_nodes
 
-### shallow\_filter\_nodes __(node: PythonBaseNode, targets: List[Any], depth: int=2, examine: bool=)__
-
-_return_ Iterator[PythonBaseNode]
+__(node: PythonBaseNode, targets: List[Any], depth: int = 2, examine: bool = True)__ -> __Iterator[PythonBaseNode]__ 
 
 Recursive find every node with target type with depth limit.
 
-------
+### same_parsed
 
-### same\_parsed __(node: Union[Name, Keyword, Operator, Literal], *values: List[str])__
-
-_return_ Union[ParsedName, ParsedKeyword, ParsedOperator, ParsedLiteral]
+__(node: Union[Name, Keyword, Operator, Literal], *values: List[str])__ -> __Union[ParsedName, ParsedKeyword, ParsedOperator, ParsedLiteral]__ 
 
 Get same object from parsed object.
 
-------
+### norm_stmt
 
-### norm\_stmt __(node: PythonBaseNode, equation: bool=)__
-
-_return_ List[Any]
+__(node: PythonBaseNode, equation: bool = True)__ -> __List[Any]__ 
 
 Statement normalization function.
 
-------
+### extract_imports
 
-### extract\_imports __(node: Module)__
-
-_return_ List[ParsedImport]
+__(node: Module)__ -> __List[ParsedImport]__ 
 
 Extract parsed imports from module.
 
-------
+### extract_statements
 
-### extract\_statements __(node: PythonBaseNode)__
-
-_return_ List[ParsedStatement]
+__(node: PythonBaseNode)__ -> __List[ParsedStatement]__ 
 
 Extract parsed statements from module.
 
@@ -93,11 +121,9 @@ Extract parsed statements from module.
     app = web.Application(port='69')
     nice = True
 
-------
+### extract_params
 
-### extract\_params __(node: Union[Class, Function])__
-
-_return_ List[ParsedParameter]
+__(node: Union[Class, Function])__ -> __List[ParsedParameter]__ 
 
 Extract parsed parameters from node.
 
@@ -108,56 +134,42 @@ Extract parsed parameters from node.
     Extracted parameters:
         a: int, b: int = 2
 
-------
+### extract_decorators
 
-### extract\_decorators __(node: Union[Class, Function])__
-
-_return_ List[ParsedDecorator]
+__(node: Union[Class, Function])__ -> __List[ParsedDecorator]__ 
 
 Extract parsed decorators for function, method or class.
 
-------
+### extract_functions
 
-### extract\_functions __(node: Union[Module, Class])__
-
-_return_ List[ParsedFunction]
+__(node: Union[Module, Class])__ -> __List[ParsedFunction]__ 
 
 Extract parsed functions from node.
 
-------
+### extract_classes
 
-### extract\_classes __(node: Module)__
-
-_return_ List[ParsedClass]
+__(node: Module)__ -> __List[ParsedClass]__ 
 
 Extract parsed classes from node.
 
-------
+### extract
 
-### extract __(file\_name: Path)__
-
-_return_ ParsedModule
+__(file\_name: Path)__ -> __ParsedModule__ 
 
 Extract parsed module from file by path.
 
-------
+### find_python
 
-### find\_python __(base: Path)__
-
-_return_ Iterator[Path]
+__(base: Path)__ -> __Iterator[Path]__ 
 
 Find python files in directory and subdirectories.
 
-------
+### find_and_extract
 
-### find\_and\_extract __(base: Path)__
-
-_return_ Iterator[ParsedModule]
+__(base: Path)__ -> __Iterator[ParsedModule]__ 
 
 Recursive extract parsed module in directory.
 
     Extract parsed module for every python files in directory and
     subdirectories.
-
-------
 

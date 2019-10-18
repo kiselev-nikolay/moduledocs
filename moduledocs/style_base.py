@@ -12,6 +12,7 @@ class BaseBuilder(ABC):
 
     def __init__(self):
         """Create builder for parsed module."""
+        self.content_table: List[Tuple[str, int]] = []
 
     @abstractmethod
     def setting(self, **kwargs):
@@ -43,8 +44,6 @@ class BaseBuilder(ABC):
             total_index: List[str] = []
             for folder, index in self.indexes.items():
                 index_str_paths = [str(i) for i in index]
-                self.texts.append((folder / 'index',
-                                   self.index(index_str_paths)))
                 total_index.extend(index_str_paths)
             self.texts.append((Path('index'), self.index(total_index)))
 

@@ -1,16 +1,38 @@
 # Style base
 
+
+
+  + [Style base](#style-base)
+
+    + [Require](#require)
+
+    + [Docstring](#docstring)
+
+    + [Configuration](#configuration)
+
+      + [Imports](#imports)
+
+    + [Classes](#classes)
+
+      + [BaseBuilder](#basebuilder)
+
+        + [\_\_init\_\_](#__init__)
+
+        + [setting](#setting)
+
+        + [index](#index)
+
+        + [build](#build)
+
+        + [feed](#feed)
+
+        + [save](#save)
+
+
+
 ## Require
 
-1. typing
-
-1. pathlib
-
-1. abc
-
-1. parsed\_objects
-
-1. warnings
+_typing, pathlib, abc, parsed\_objects, warnings_ 
 
 ## Docstring
 
@@ -36,53 +58,41 @@ Base documentation builder class.
 
 Abstract class for converting ParsedModule to a special style string.
 
-#### \_\_init\_\_ __(self)__
 
-_return_ {0}
+
+#### __init__
+
+__(self)__ 
 
 Create builder for parsed module.
 
-------
+#### setting
 
-#### setting __(self, **kwargs)__
-
-_return_ {0}
+__(self, **kwargs)__ 
 
 Builder settings for parsed module.
 
-------
+#### index
 
-#### index __(self, index\_items: List[str])__
-
-_return_ str
+__(self, index\_items: List[str])__ -> __str__ 
 
 Render index as text.
 
-------
+#### build
 
-#### build __(self, modules: List[ParsedModule])__
-
-_return_ {0}
+__(self, modules: List[ParsedModule])__ 
 
 Build for parsed module.
 
-------
+#### feed
 
-#### feed __(self, module: ParsedModule)__
-
-_return_ {0}
+__(self, module: ParsedModule)__ 
 
 Convert ParsedModule to a string and stores it in self.text.
 
-------
+#### save
 
-#### save __(self, docs\_path: Path)__
-
-_return_ {0}
+__(self, docs\_path: Path)__ 
 
 Save file at location specified on init.
-
-------
-
-------
 

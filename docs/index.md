@@ -1,12 +1,14 @@
-[moduledocs/parse.py.md](moduledocs/parse.py.md)
++ /moduledocs
 
-[moduledocs/parsed\_objects.py.md](moduledocs/parsed\_objects.py.md)
+  + [\_\_init\_\_.py](moduledocs/\_\_init\_\_.py.md)
 
-[moduledocs/\_\_init\_\_.py.md](moduledocs/\_\_init\_\_.py.md)
+  + [cli.py](moduledocs/cli.py.md)
 
-[moduledocs/style\_markdown.py.md](moduledocs/style\_markdown.py.md)
+  + [parse.py](moduledocs/parse.py.md)
 
-[moduledocs/cli.py.md](moduledocs/cli.py.md)
+  + [parsed\_objects.py](moduledocs/parsed\_objects.py.md)
 
-[moduledocs/style\_base.py.md](moduledocs/style\_base.py.md)
+  + [style\_base.py](moduledocs/style\_base.py.md)
+
+  + [style\_markdown.py](moduledocs/style\_markdown.py.md)
 

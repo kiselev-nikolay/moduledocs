@@ -1,14 +1,28 @@
 # Cli
 
+
+
+  + [Cli](#cli)
+
+    + [Require](#require)
+
+    + [Docstring](#docstring)
+
+    + [Configuration](#configuration)
+
+      + [Imports](#imports)
+
+    + [Functions](#functions)
+
+      + [cli](#cli)
+
+      + [main](#main)
+
+
+
 ## Require
 
-1. fire
-
-1. pathlib
-
-1. parse
-
-1. style\_markdown
+_fire, pathlib, parse, style\_markdown_ 
 
 ## Docstring
 
@@ -28,21 +42,19 @@ Comand line interface apllication.
 
 ## Functions
 
-### cli __(input\_directory: str, output\_directory: str='docs', style: str='md')__
 
-_return_ {0}
+
+### cli
+
+__(input\_directory: str, output\_directory: str = 'docs', style: str = 'md')__ 
 
 Moduledocs.
 
     Module for generating documentation for python source code files.
 
-------
+### main
 
-### main __()__
-
-_return_ {0}
+__()__ 
 
 Callable function for command  line interface.
-
-------
 

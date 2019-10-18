@@ -116,8 +116,8 @@ class ParsedStatement:
 
     def code(self):
         """Return code recreation for parsed statement."""
-        full_name = ''.join([n.value for n in self.name])
-        full_value = ''.join([n.value for n in self.value])
+        full_name = ''.join([getattr(n, 'value', str(n)) for n in self.name])
+        full_value = ''.join([getattr(n, 'value', str(n)) for n in self.value])
         return '{} = {}'.format(full_name, full_value)
 
 
@@ -155,6 +155,7 @@ class ParsedFunction:
         code = ''.join([p.value for p in self.paramenters])
         code = code.replace(',', ', ')
         code = code.replace(':', ': ')
+        code = code.replace('=', ' = ')
         code = '({})'.format(code)
         return code
     # TODO Parse or not nested class or func
